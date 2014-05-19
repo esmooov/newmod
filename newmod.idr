@@ -35,6 +35,15 @@ modplus {n=n} (mkMod i _) (mkMod i' _) = modplus' (i + i') (makeModZ n)
 modplusCommutative : (a : Mod (S n)) -> (b : Mod (S n)) -> modplus a b = modplus b a
 modplusCommutative (mkMod i _) (mkMod i' _) = ?mpluscomutative
 
+modplusReduce : (j : Nat) -> (k : Nat) -> (n : Nat) -> (LT j (S n)) -> modplus' j (mkMod 0 (n ** (S n ** refl))) = mkMod j (k ** (S n ** prf))
+
+modplusInjection : (i : Nat) -> (k : Nat) -> (j : Nat) -> (n : Nat) -> (prf: S n = S (i+k)) -> modplus {n=n} (mkMod i (k ** (S n ** prf))) (modplus' j (mkMod 0 (n ** (S n ** refl)))) = modplus' {n = S n} (i + j) (mkMod 0 (n ** (S n ** refl)))
+modplusInjection i k j n prf with (modplus' {n = S n} j (mkMod 0 (n ** (S n ** refl))))
+  | (mkMod o r) = ?mpiprf
+
+modplusAssociative : (a : Mod (S n)) -> (b : Mod (S n)) -> (c : Mod (S n)) -> modplus a (modplus b c) = modplus (modplus a b) c
+modplusAssociative (mkMod i x) (mkMod k y) (mkMod j z) = ?prf_1
+
 succPlusInvert : (a : Nat) -> (b : Nat) -> (S a) + b = (S b) + a
 succPlusInvert Z b = rewrite plusCommutative Z b in refl
 succPlusInvert (S a) b = ?succplusprf
