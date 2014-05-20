@@ -38,18 +38,22 @@ modplus {n=n} (mkMod i _) (mkMod i' _) = modplus' (i + i') (makeModZ n)
 modplusCommutative : (a : Mod (S n)) -> (b : Mod (S n)) -> modplus a b = modplus b a
 modplusCommutative (mkMod i _) (mkMod i' _) = ?mpluscomutative
 
-natPlusMinusInverse : (j : Nat) -> (n : Nat) -> LT j n -> plus j (n-j) = n
+natPlusMinusInverse : (j : Nat) -> (n : Nat) -> LTE j n -> plus j (n-j) = n
+natPlusMinusInverse Z Z lt = refl
 natPlusMinusInverse Z n lt = minusZeroRight n
-natPlusMinusInverse j Z lt = FalseElim (succNotLTEZ j lt)
+natPlusMinusInverse (S j) Z lt = FalseElim (succNotLTEZ j lt)
 natPlusMinusInverse (S j) (S n) (lteSucc lt) = let ih = natPlusMinusInverse j n lt in ?npmiprf
 
-modFill : (j : Nat) -> (n : Nat) -> LT j n -> Mod (S n)
+modFill : (j : Nat) -> (n : Nat) -> LT j (S n) -> Mod (S n)
 modFill Z Z lt = mkMod Z (Z ** (S Z ** refl))
 modFill Z n lt = mkMod Z (n-Z ** (S n ** ?modfillz))
-modFill j Z lt = FalseElim $ succNotLTEZ j lt
-modFill (S k) n ltp = mkMod (S k) (n-(S k) ** (S n ** ?modfill))
+modFill (S k) Z (lteSucc p) = FalseElim $ succNotLTEZ k p
+modFill (S k) (S n) (lteSucc (lteSucc p)) = mkMod (S k) ((S n)-(S k) ** (S (S n) ** ?modfill))
 
---modplusReduce : (j : Nat) -> (k : Nat) -> (n : Nat) -> (LT j (S n)) -> (p : k = n - j) -> (prf : S n = S(j + k)) -> modplus' {n = S n} j (mkMod 0 (n ** (S n ** refl))) = mkMod {n = S n} j (k ** (S n ** refl))
+m3 : Mod 3
+m3 = modFill 1 2 (lteSucc $ lteSucc lteZero)
+
+--modplusReduce : (j : Nat) -> (k : Nat) -> (n : Nat) -> (prf: LT j (S n)) -> modplus' {n = S n} j (mkMod 0 (n ** (S n ** refl))) = modFill j n 
 --modplusReduce Z k n lt p prf = ?mprprf_1
 --modplusReduce (S j) k n lt p prf = ?mprprf_2
 
@@ -79,10 +83,17 @@ inverseM {n = n} (mkMod (S k) (l ** (S n ** prf))) = (mkMod (S l) (k ** (S n ** 
 ---------- Proofs ----------
 
 Main.modfill = proof
-  intros
   compute
-  rewrite sym (natPlusMinusInverse (S k) n ltp)
+  intros
+  rewrite sym (natPlusMinusInverse k n p)
   trivial
+
+
+--Main.modfill = proof
+  --intros
+  --compute
+  --rewrite sym (natPlusMinusInverse (S k) n ltp)
+  --trivial
 
 
 Main.npmiprf = proof
