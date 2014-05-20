@@ -23,6 +23,9 @@ zeroNotSucc : (n : Nat) -> Z = S n -> _|_
 zeroNotSucc Z refl impossible
 zeroNotSucc (S k) refl impossible
 
+succNotLTEZ : (n : Nat) -> LTE (S n) Z -> _|_
+succNotLTEZ n lteZero impossible 
+
 modplus' : Nat -> Mod n -> Mod n
 modplus' Z m' = m'
 modplus' {n=n} (S i) m' with (decEq n (S i))
@@ -35,11 +38,24 @@ modplus {n=n} (mkMod i _) (mkMod i' _) = modplus' (i + i') (makeModZ n)
 modplusCommutative : (a : Mod (S n)) -> (b : Mod (S n)) -> modplus a b = modplus b a
 modplusCommutative (mkMod i _) (mkMod i' _) = ?mpluscomutative
 
-modplusReduce : (j : Nat) -> (k : Nat) -> (n : Nat) -> (LT j (S n)) -> modplus' j (mkMod 0 (n ** (S n ** refl))) = mkMod j (k ** (S n ** prf))
+natPlusMinusInverse : (j : Nat) -> (n : Nat) -> LT j n -> plus j (n-j) = n
+natPlusMinusInverse Z n lt = minusZeroRight n
+natPlusMinusInverse j Z lt = FalseElim (succNotLTEZ j lt)
+natPlusMinusInverse (S j) (S n) (lteSucc lt) = let ih = natPlusMinusInverse j n lt in ?npmiprf
 
-modplusInjection : (i : Nat) -> (k : Nat) -> (j : Nat) -> (n : Nat) -> (prf: S n = S (i+k)) -> modplus {n=n} (mkMod i (k ** (S n ** prf))) (modplus' j (mkMod 0 (n ** (S n ** refl)))) = modplus' {n = S n} (i + j) (mkMod 0 (n ** (S n ** refl)))
-modplusInjection i k j n prf with (modplus' {n = S n} j (mkMod 0 (n ** (S n ** refl))))
-  | (mkMod o r) = ?mpiprf
+modFill : (j : Nat) -> (n : Nat) -> LT j n -> Mod (S n)
+modFill Z Z lt = mkMod Z (Z ** (S Z ** refl))
+modFill Z n lt = mkMod Z (n-Z ** (S n ** ?modfillz))
+modFill j Z lt = FalseElim $ succNotLTEZ j lt
+modFill (S k) (S n) lt = mkMod (S k) (n-(S k) ** (S n ** ?modfill))
+
+--modplusReduce : (j : Nat) -> (k : Nat) -> (n : Nat) -> (LT j (S n)) -> (p : k = n - j) -> (prf : S n = S(j + k)) -> modplus' {n = S n} j (mkMod 0 (n ** (S n ** refl))) = mkMod {n = S n} j (k ** (S n ** refl))
+--modplusReduce Z k n lt p prf = ?mprprf_1
+--modplusReduce (S j) k n lt p prf = ?mprprf_2
+
+--modplusInjection : (i : Nat) -> (k : Nat) -> (j : Nat) -> (n : Nat) -> (prf: S n = S (i+k)) -> modplus {n=n} (mkMod i (k ** (S n ** prf))) (modplus' j (mkMod 0 (n ** (S n ** refl)))) = modplus' {n = S n} (i + j) (mkMod 0 (n ** (S n ** refl)))
+--modplusInjection i k j n prf with (modplus' {n = S n} j (mkMod 0 (n ** (S n ** refl))))
+  --| (mkMod o r) = ?mpiprf
 
 modplusAssociative : (a : Mod (S n)) -> (b : Mod (S n)) -> (c : Mod (S n)) -> modplus a (modplus b c) = modplus (modplus a b) c
 modplusAssociative (mkMod i x) (mkMod k y) (mkMod j z) = ?prf_1
@@ -61,6 +77,21 @@ inverseM (mkMod (S i) (l ** (Z ** prf))) = FalseElim $ zeroNotSucc (plus (S i) l
 inverseM {n = n} (mkMod (S k) (l ** (S n ** prf))) = (mkMod (S l) (k ** (S n ** invertPrf k l (S n) prf)) ** ?imprf)
 
 ---------- Proofs ----------
+
+Main.npmiprf = proof
+  compute
+  intros
+  refine cong
+  exact ih
+
+
+
+Main.modfillz = proof
+  compute
+  intros
+  rewrite sym (minusZeroRight n)
+  trivial
+
 
 
 Main.imprf = proof
