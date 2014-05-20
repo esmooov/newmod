@@ -47,7 +47,7 @@ modFill : (j : Nat) -> (n : Nat) -> LT j n -> Mod (S n)
 modFill Z Z lt = mkMod Z (Z ** (S Z ** refl))
 modFill Z n lt = mkMod Z (n-Z ** (S n ** ?modfillz))
 modFill j Z lt = FalseElim $ succNotLTEZ j lt
-modFill (S k) (S n) lt = mkMod (S k) (n-(S k) ** (S n ** ?modfill))
+modFill (S k) n ltp = mkMod (S k) (n-(S k) ** (S n ** ?modfill))
 
 --modplusReduce : (j : Nat) -> (k : Nat) -> (n : Nat) -> (LT j (S n)) -> (p : k = n - j) -> (prf : S n = S(j + k)) -> modplus' {n = S n} j (mkMod 0 (n ** (S n ** refl))) = mkMod {n = S n} j (k ** (S n ** refl))
 --modplusReduce Z k n lt p prf = ?mprprf_1
@@ -77,6 +77,13 @@ inverseM (mkMod (S i) (l ** (Z ** prf))) = FalseElim $ zeroNotSucc (plus (S i) l
 inverseM {n = n} (mkMod (S k) (l ** (S n ** prf))) = (mkMod (S l) (k ** (S n ** invertPrf k l (S n) prf)) ** ?imprf)
 
 ---------- Proofs ----------
+
+Main.modfill = proof
+  intros
+  compute
+  rewrite sym (natPlusMinusInverse (S k) n ltp)
+  trivial
+
 
 Main.npmiprf = proof
   compute
