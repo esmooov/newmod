@@ -44,14 +44,17 @@ natPlusMinusInverse Z n lt = minusZeroRight n
 natPlusMinusInverse (S j) Z lt = FalseElim (succNotLTEZ j lt)
 natPlusMinusInverse (S j) (S n) (lteSucc lt) = let ih = natPlusMinusInverse j n lt in ?npmiprf
 
-modFill : (j : Nat) -> (n : Nat) -> LT j (S n) -> Mod (S n)
-modFill k n (lteSucc p) = mkMod k (n - k ** ((S n) ** ?modfill))
+prfFill : (j : Nat) -> (n : Nat) -> LTE j n -> Mod (S n)
+prfFill j n ltp = mkMod j ((n - j) ** (S n ** cong $ sym $ natPlusMinusInverse j n ltp))
 
-modplusReduce : (j : Nat) -> (n : Nat) -> (prf: LTE j n) -> (prf' : S n = S (j + (n - j))) -> modplus' {n = S n} j (mkMod 0 (n ** (S n ** refl))) = mkMod {n=S n} j (n-j ** (S n ** prf'))
---modplusReduce Z Z (lteSucc p) o = ?mprprf_f
---modplusReduce Z (S j) (lteSucc p) refl = refl
-modplusReduce j n p (cong $ sym $ natPlusMinusInverse j (S n) p) = ?mprprf_2
---modplusReduce j n p (sym $ natPlusMinusInverse j (S n) p) = ?mprprf_2
+--modFill : (j : Nat) -> (n : Nat) -> LTE j n -> Mod (S n)
+--modFill j n p = let (k ** prf) = prfFill j n p in  mkMod k (n - k ** ((S n) ** prf))
+
+modplusReduce : (j : Nat) -> (n : Nat) -> (prf: LTE j n) -> modplus' {n = S n} j (prfFill Z n lteZero) = prfFill j n prf
+modplusReduce j n ltp = ?mprprf_1
+modplusReduce Z (S k) ltp = ?mprprf_2
+modplusReduce (S k) Z ltp = ?mprprf_3
+modplusReduce (S k) (S j) ltp = ?mprprf_4
 
 --modplusInjection : (i : Nat) -> (k : Nat) -> (j : Nat) -> (n : Nat) -> (prf: S n = S (i+k)) -> modplus {n=n} (mkMod i (k ** (S n ** prf))) (modplus' j (mkMod 0 (n ** (S n ** refl)))) = modplus' {n = S n} (i + j) (mkMod 0 (n ** (S n ** refl)))
 --modplusInjection i k j n prf with (modplus' {n = S n} j (mkMod 0 (n ** (S n ** refl))))
@@ -77,12 +80,6 @@ inverseM (mkMod (S i) (l ** (Z ** prf))) = FalseElim $ zeroNotSucc (plus (S i) l
 inverseM {n = n} (mkMod (S k) (l ** (S n ** prf))) = (mkMod (S l) (k ** (S n ** invertPrf k l (S n) prf)) ** ?imprf)
 
 ---------- Proofs ----------
-
-Main.modfill = proof
-  compute
-  intros
-  rewrite sym (natPlusMinusInverse k n p)
-  trivial
 
 Main.npmiprf = proof
   compute
