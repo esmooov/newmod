@@ -45,17 +45,13 @@ natPlusMinusInverse (S j) Z lt = FalseElim (succNotLTEZ j lt)
 natPlusMinusInverse (S j) (S n) (lteSucc lt) = let ih = natPlusMinusInverse j n lt in ?npmiprf
 
 modFill : (j : Nat) -> (n : Nat) -> LT j (S n) -> Mod (S n)
-modFill Z Z lt = mkMod Z (Z ** (S Z ** refl))
-modFill Z n lt = mkMod Z (n-Z ** (S n ** ?modfillz))
-modFill (S k) Z (lteSucc p) = FalseElim $ succNotLTEZ k p
-modFill (S k) (S n) (lteSucc (lteSucc p)) = mkMod (S k) ((S n)-(S k) ** (S (S n) ** ?modfill))
+modFill k n (lteSucc p) = mkMod k (n - k ** ((S n) ** ?modfill))
 
-m3 : Mod 3
-m3 = modFill 1 2 (lteSucc $ lteSucc lteZero)
-
---modplusReduce : (j : Nat) -> (k : Nat) -> (n : Nat) -> (prf: LT j (S n)) -> modplus' {n = S n} j (mkMod 0 (n ** (S n ** refl))) = modFill j n 
---modplusReduce Z k n lt p prf = ?mprprf_1
---modplusReduce (S j) k n lt p prf = ?mprprf_2
+modplusReduce : (j : Nat) -> (n : Nat) -> (prf: LTE j n) -> (prf' : S n = S (j + (n - j))) -> modplus' {n = S n} j (mkMod 0 (n ** (S n ** refl))) = mkMod {n=S n} j (n-j ** (S n ** prf'))
+--modplusReduce Z Z (lteSucc p) o = ?mprprf_f
+--modplusReduce Z (S j) (lteSucc p) refl = refl
+modplusReduce j n p (cong $ sym $ natPlusMinusInverse j (S n) p) = ?mprprf_2
+--modplusReduce j n p (sym $ natPlusMinusInverse j (S n) p) = ?mprprf_2
 
 --modplusInjection : (i : Nat) -> (k : Nat) -> (j : Nat) -> (n : Nat) -> (prf: S n = S (i+k)) -> modplus {n=n} (mkMod i (k ** (S n ** prf))) (modplus' j (mkMod 0 (n ** (S n ** refl)))) = modplus' {n = S n} (i + j) (mkMod 0 (n ** (S n ** refl)))
 --modplusInjection i k j n prf with (modplus' {n = S n} j (mkMod 0 (n ** (S n ** refl))))
@@ -88,29 +84,11 @@ Main.modfill = proof
   rewrite sym (natPlusMinusInverse k n p)
   trivial
 
-
---Main.modfill = proof
-  --intros
-  --compute
-  --rewrite sym (natPlusMinusInverse (S k) n ltp)
-  --trivial
-
-
 Main.npmiprf = proof
   compute
   intros
   refine cong
   exact ih
-
-
-
-Main.modfillz = proof
-  compute
-  intros
-  rewrite sym (minusZeroRight n)
-  trivial
-
-
 
 Main.imprf = proof
   compute
