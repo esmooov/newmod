@@ -31,11 +31,18 @@ reduceSZEqZ : (r : Nat) -> reduce' (S Z) Z r = Z
 reduceSZEqZ Z = refl
 reduceSZEqZ (S r) = let ih = reduceSZEqZ r in ?rszezprf
 
+cycInverse' : Nat -> Nat -> Nat -> Nat
+cycInverse' Z _ _ = Z 
+cycInverse' n c Z = c
+cycInverse' (S n) Z (S r) = cycInverse' (S n) n r
+cycInverse' n (S c) (S r) = cycInverse' n c r
+
+
 cycInverse : (c : Cyc (S n)) -> (i : Cyc (S n) ** (reduce (cycPlus (reduce c) i)) = mkCyc {n = n} 0)
 cycInverse {n = Z} (mkCyc c) = (mkCyc Z ** ?invsprfz)
-cycInverse {n = (S n)} c with (reduce c)
+cycInverse {n = S n} c with (reduce c)
   | (mkCyc Z) = ((mkCyc Z) ** refl)
-  | (mkCyc (S r)) = (mkCyc ((S n) - r) ** ?invsprf)
+  | (mkCyc (S r)) = (mkCyc (cycInverse' (S (S n)) Z r) ** ?invsprf)
 
 ---------- Proofs ----------
 
