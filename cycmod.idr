@@ -3,6 +3,10 @@
 succNotLTEZ : (n : Nat) -> LTE (S n) Z -> _|_
 succNotLTEZ n lteZero impossible 
 
+decEqNatRefl : (a : Nat) -> decEq a a = Yes refl {a}
+decEqNatRefl Z = refl
+decEqNatRefl (S a) = let ih = decEqNatRefl a in ?deceqnatrefl
+
 data Cyc : Nat -> Type where
   mkCyc : (r : Nat) -> Cyc (S n)
 
@@ -30,6 +34,10 @@ reduce' n c (S r) with (decEq n (S c))
   | (Yes p) = reduce' n Z r
   | (No p) = reduce' n (S c) r
 
+reduceElim'' : (n : Nat) -> mkCyc {n=n} (reduce' (S n) Z (S n)) = mkCyc {n = n} Z
+reduceElim'' Z = refl
+reduceElim'' (S k) 
+
 unsuccInEq : (c : Nat) -> (n : Nat) -> ((S n = S c) -> _|_) -> ((n = c) -> _|_)
 unsuccInEq c n prf prf' = ?usieprf
 
@@ -53,10 +61,12 @@ reduce : Cyc (S n) -> Cyc (S n)
 reduce (mkCyc r) {n=n} = mkCyc $ reduce' (S n) Z r
 
 reduceP : (n: Nat) -> Cyc (S n) -> (r : Nat ** LT r (S n))
-reduceP n (mkCyc Z) = (Z ** ?reducepprfz)
-reduceP n (mkCyc (S r)) with (reduce' (S n) Z (S r))
-  | (Z) = (Z ** ?reducepprfsz)
-  | (S r') = ((S r') ** ?reducepprfss)
+reduceP Z (mkCyc c) = (Z ** (lteSucc lteZero))
+reduceP (S n) (mkCyc c) = reducel (S (S n)) (Z ** (lteSucc lteZero)) c
+
+reducePMk : Cyc (S n) -> Cyc (S n)
+reducePMk {n=n} c with (reduceP n c)
+  | (r ** prf) = mkCyc r
 
 reduceSZEqZ : (r : Nat) -> reduce' (S Z) Z r = Z
 reduceSZEqZ Z = refl
@@ -73,13 +83,39 @@ minusElim n Z prf = ?minusElimPrfz
 minusElim Z (S r) prf = FalseElim ?wrongo
 minusElim (S n) (S r) (lteSucc prf) = let ih = minusElim n r prf in ?minusElimPrf
 
-cycInverse : (c : Cyc (S n)) -> (i : Cyc (S n) ** (reduce (cycPlus (reduce c) i)) = mkCyc {n = n} 0)
-cycInverse {n = Z} (mkCyc c) = (mkCyc Z ** ?invsprfz)
-cycInverse {n = S n} c with (reduce c)
-  | (mkCyc Z) = ((mkCyc Z) ** refl)
-  | (mkCyc (S r)) = (mkCyc ((S (S n)) - (S r)) ** ?invsprf)
+decEqNo : (n : Nat) ->  (prf: (n = Z) -> _|_) -> decEq n Z = No prf
+decEqNo n prf with (decEq n Z)
+  | (Yes p) = ?a
+  | (No prf) = ?b
+
+cycInverse : (c : Cyc (S n)) -> (i : Cyc (S n) ** (reduce (cycPlus (mkCyc (getWitness $ reduceP n c)) i)) = mkCyc {n = n} 0)
+cycInverse {n = Z} (mkCyc c) = (mkCyc Z ** refl)
+cycInverse {n = S n} c with (reduceP (S n) c)
+  | (Z ** prf) = ((mkCyc Z) ** refl)
+  | ((S r) ** (lteSucc prf)) with (decEq n 0)
+    | (Yes prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsyprf)
+    | (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
 
 ---------- Proofs ----------
+
+Main.invsnprf = proof
+  compute
+  intros
+  rewrite sym (minusElim (S n) r prf)
+  rewrite (reduceElim'' (S n))
+  compute
+  refine refl
+
+
+Main.invsyprf = proof
+  compute
+  intros
+  rewrite sym (minusElim (S n) r prf)
+  compute
+  rewrite sym prf'
+  compute
+  trivial
+
 
 Main.lstelim = proof
   intros
@@ -125,20 +161,6 @@ Main.lteadvprf_1 = proof
   exact lteZero 
 
 
-Main.reducepprfsz = proof
-  compute
-  intros
-  refine lteSucc
-  exact lteZero
-
-
-Main.reducepprfz = proof
-  compute
-  intros
-  refine lteSucc
-  exact lteZero
-
-
 Main.wrongo = proof
   compute
   intros
@@ -157,13 +179,6 @@ Main.minusElimPrfz = proof
   rewrite sym (minusZeroRight n)
   trivial
 
-
-Main.invsprfz = proof
-  compute
-  intros
-  rewrite sym (reduceSZEqZ c)
-  compute
-  trivial
 
 
 Main.rszezprf = proof
@@ -189,3 +204,9 @@ Main.cycassociativeprf = proof
   trivial
 
 
+Main.deceqnatrefl = proof
+  compute
+  intros
+  rewrite sym ih
+  compute
+  trivial
