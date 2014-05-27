@@ -53,11 +53,8 @@ reduceElimg n c (S k) prf with (decEq n c)
   | (Yes p) = FalseElim ?reduceelimf
   | (No p)= let ih = reduceElimg n (S c) k (advPlusPrf (S n) c k prf) in ?reduceelimprf
 
-reduceElim'' : (n : Nat) -> mkCyc {n=n} (reduce' (S n) Z (S n)) = mkCyc {n = n} Z
-reduceElim'' Z = refl
-reduceElim'' (S k) with (decEq (S k) (S Z))
-  | (Yes p) = ?az
-  | (No p) = ?bz
+reduceElim : (n : Nat) -> mkCyc {n=n} (reduce' (S n) Z (S n)) = mkCyc {n = n} Z
+reduceElim n = ?remprf
 
 unsuccInEq : (c : Nat) -> (n : Nat) -> ((S n = S c) -> _|_) -> ((n = c) -> _|_)
 unsuccInEq c n prf prf' = ?usieprf
@@ -85,14 +82,6 @@ reduceP : (n: Nat) -> Cyc (S n) -> (r : Nat ** LT r (S n))
 reduceP Z (mkCyc c) = (Z ** (lteSucc lteZero))
 reduceP (S n) (mkCyc c) = reducel (S (S n)) (Z ** (lteSucc lteZero)) c
 
-reducePMk : Cyc (S n) -> Cyc (S n)
-reducePMk {n=n} c with (reduceP n c)
-  | (r ** prf) = mkCyc r
-
-reduceSZEqZ : (r : Nat) -> reduce' (S Z) Z r = Z
-reduceSZEqZ Z = refl
-reduceSZEqZ (S r) = let ih = reduceSZEqZ r in ?rszezprf
-
 cycInverse' : Nat -> Nat -> Nat -> Nat
 cycInverse' Z _ _ = Z 
 cycInverse' n c Z = c
@@ -104,11 +93,6 @@ minusElim n Z prf = ?minusElimPrfz
 minusElim Z (S r) prf = FalseElim ?wrongo
 minusElim (S n) (S r) (lteSucc prf) = let ih = minusElim n r prf in ?minusElimPrf
 
-decEqNo : (n : Nat) ->  (prf: (n = Z) -> _|_) -> decEq n Z = No prf
-decEqNo n prf with (decEq n Z)
-  | (Yes p) = ?a
-  | (No prf) = ?b
-
 cycInverse : (c : Cyc (S n)) -> (i : Cyc (S n) ** (reduce (cycPlus (mkCyc (getWitness $ reduceP n c)) i)) = mkCyc {n = n} 0)
 cycInverse {n = Z} (mkCyc c) = (mkCyc Z ** refl)
 cycInverse {n = S n} c with (reduceP (S n) c)
@@ -118,6 +102,24 @@ cycInverse {n = S n} c with (reduceP (S n) c)
     | (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
 
 ---------- Proofs ----------
+
+Main.remprf = proof
+  compute
+  intros
+  let prf = reduceElimg n Z n refl
+  rewrite sym prf
+  trivial
+
+
+Main.reduceelimf = proof
+  compute
+  intro n,c,p,k
+  rewrite sym p
+  rewrite (plusSuccRightSucc c (S k))
+  intro
+  let prf' = succInjective c (plus c (S k)) prf
+  exact (natNotEqPlusSucc c k prf')
+
 
 Main.reduceelimprf = proof
   compute
@@ -138,13 +140,9 @@ Main.appprf = proof
 
 Main.prf_1 = proof
   intro n,c
-  rewrite (plusCommutative c 1)
-  rewrite (plusCommutative 1 c)
   compute
   rewrite (plusCommutative 1 c)
   intro
-  let prf' = succInjective n c
-  let prf' = succInjective n c prf
   let prfa = succInjective n c prf
   rewrite prfa
   rewrite sym (decEqNatRefl n)
@@ -156,9 +154,9 @@ Main.invsnprf = proof
   compute
   intros
   rewrite sym (minusElim (S n) r prf)
-  rewrite (reduceElim'' (S n))
+  rewrite (reduceElim (S n))
   compute
-  refine refl
+  trivial
 
 
 Main.invsyprf = proof
@@ -232,13 +230,6 @@ Main.minusElimPrfz = proof
   intros
   rewrite sym (minusZeroRight n)
   trivial
-
-
-
-Main.rszezprf = proof
-  intros
-  exact ih
-
 
 Main.cprznprf = proof
   intros

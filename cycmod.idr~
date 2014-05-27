@@ -44,17 +44,17 @@ decEqInv n c prf with (decEq n c)
 advPlusPrf : (n, c, k : Nat) -> n = c + (S (S k)) -> n = (S c) + (S k)
 advPlusPrf n c k prf = ?appprf
 
+natNotEqPlusSucc : (c,k : Nat) -> c = plus c (S k) -> _|_
+natNotEqPlusSucc c k refl impossible
+
 reduceElimg : (n,c,r : Nat) -> (prf: (S n) = c + (S r)) -> reduce' (S n) c (S r) = Z
 reduceElimg n c Z prf = ?prf_1
 reduceElimg n c (S k) prf with (decEq n c)
-  | (Yes p) = let ih = reduceElimg n (S c) k (advPlusPrf (S n) c k prf) in ?pooy
-  | (No p)= let ih = reduceElimg n (S c) k (advPlusPrf (S n) c k prf) in ?poon
+  | (Yes p) = FalseElim ?reduceelimf
+  | (No p)= let ih = reduceElimg n (S c) k (advPlusPrf (S n) c k prf) in ?reduceelimprf
 
 reduceElim'' : (n : Nat) -> mkCyc {n=n} (reduce' (S n) Z (S n)) = mkCyc {n = n} Z
-reduceElim'' Z = refl
-reduceElim'' (S k) with (decEq (S k) (S Z))
-  | (Yes p) = ?az
-  | (No p) = ?bz
+reduceElim'' n = ?remprf
 
 unsuccInEq : (c : Nat) -> (n : Nat) -> ((S n = S c) -> _|_) -> ((n = c) -> _|_)
 unsuccInEq c n prf prf' = ?usieprf
@@ -101,11 +101,6 @@ minusElim n Z prf = ?minusElimPrfz
 minusElim Z (S r) prf = FalseElim ?wrongo
 minusElim (S n) (S r) (lteSucc prf) = let ih = minusElim n r prf in ?minusElimPrf
 
-decEqNo : (n : Nat) ->  (prf: (n = Z) -> _|_) -> decEq n Z = No prf
-decEqNo n prf with (decEq n Z)
-  | (Yes p) = ?a
-  | (No prf) = ?b
-
 cycInverse : (c : Cyc (S n)) -> (i : Cyc (S n) ** (reduce (cycPlus (mkCyc (getWitness $ reduceP n c)) i)) = mkCyc {n = n} 0)
 cycInverse {n = Z} (mkCyc c) = (mkCyc Z ** refl)
 cycInverse {n = S n} c with (reduceP (S n) c)
@@ -115,6 +110,26 @@ cycInverse {n = S n} c with (reduceP (S n) c)
     | (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
 
 ---------- Proofs ----------
+
+Main.reduceelimf = proof
+  compute
+  intro n,c,p,k
+  rewrite sym p
+  rewrite (plusSuccRightSucc c (S k))
+  intro
+  let prf' = succInjective c (plus c (S k)) prf
+  exact (natNotEqPlusSucc c k prf')
+
+
+Main.reduceelimprf = proof
+  compute
+  intros
+  let deq = decEqInv n c p
+  rewrite sym (getProof deq)
+  compute
+  rewrite sym ih
+  refine refl
+
 
 Main.appprf = proof
   compute
