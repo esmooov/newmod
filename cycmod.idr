@@ -1,3 +1,5 @@
+import Decidable.Equality
+
 %default total
 
 succNotLTEZ : (n : Nat) -> LTE (S n) Z -> _|_
@@ -34,9 +36,28 @@ reduce' n c (S r) with (decEq n (S c))
   | (Yes p) = reduce' n Z r
   | (No p) = reduce' n (S c) r
 
+decEqInv : (n : Nat) -> (c : Nat) -> (prf: n = c -> _|_) -> (prf' : n = c -> _|_ ** decEq n c = No prf')
+decEqInv n c prf with (decEq n c)
+  | (Yes p) = FalseElim (prf p)
+  | (No p) = (p ** refl)
+
+advPlusPrf : (n, c, k : Nat) -> n = c + (S (S k)) -> n = (S c) + (S k)
+advPlusPrf n c k prf = ?appprf
+
+natNotEqPlusSucc : (c,k : Nat) -> c = plus c (S k) -> _|_
+natNotEqPlusSucc c k refl impossible
+
+reduceElimg : (n,c,r : Nat) -> (prf: (S n) = c + (S r)) -> reduce' (S n) c (S r) = Z
+reduceElimg n c Z prf = ?prf_1
+reduceElimg n c (S k) prf with (decEq n c)
+  | (Yes p) = FalseElim ?reduceelimf
+  | (No p)= let ih = reduceElimg n (S c) k (advPlusPrf (S n) c k prf) in ?reduceelimprf
+
 reduceElim'' : (n : Nat) -> mkCyc {n=n} (reduce' (S n) Z (S n)) = mkCyc {n = n} Z
 reduceElim'' Z = refl
-reduceElim'' (S k) 
+reduceElim'' (S k) with (decEq (S k) (S Z))
+  | (Yes p) = ?az
+  | (No p) = ?bz
 
 unsuccInEq : (c : Nat) -> (n : Nat) -> ((S n = S c) -> _|_) -> ((n = c) -> _|_)
 unsuccInEq c n prf prf' = ?usieprf
@@ -97,6 +118,39 @@ cycInverse {n = S n} c with (reduceP (S n) c)
     | (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
 
 ---------- Proofs ----------
+
+Main.reduceelimprf = proof
+  compute
+  intros
+  let deq = decEqInv n c p
+  rewrite sym (getProof deq)
+  compute
+  rewrite sym ih
+  refine refl
+
+
+Main.appprf = proof
+  compute
+  intros
+  rewrite sym (plusSuccRightSucc c (S k))
+  exact prf
+
+
+Main.prf_1 = proof
+  intro n,c
+  rewrite (plusCommutative c 1)
+  rewrite (plusCommutative 1 c)
+  compute
+  rewrite (plusCommutative 1 c)
+  intro
+  let prf' = succInjective n c
+  let prf' = succInjective n c prf
+  let prfa = succInjective n c prf
+  rewrite prfa
+  rewrite sym (decEqNatRefl n)
+  compute
+  trivial
+
 
 Main.invsnprf = proof
   compute
