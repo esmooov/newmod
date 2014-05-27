@@ -101,14 +101,6 @@ cycInverse {n = S n} c with (reduceP (S n) c)
     | (Yes prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsyprf)
     | (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
 
-partial
-cycInverse2 : (c : Cyc (S n)) -> (i : Cyc (S n) ** ((mkCyc {n=n} $ getWitness $ reduceP n (cycPlus c i)) = mkCyc {n = n} 0))
-cycInverse2 {n = n} c with (reduceP n c)
-  | (Z ** prf) = ((mkCyc Z) ** ?invzprf)
-  --| ((S r) ** (lteSucc prf)) with (decEq n 0)
-    --| (Yes prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsyprf)
-    --| (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
-
 ---------- Proofs ----------
 
 Main.remprf = proof
