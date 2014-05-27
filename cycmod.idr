@@ -2,6 +2,15 @@ import Decidable.Equality
 
 %default total
 
+data Inspect : a -> Type where
+  wi : {A : Type} -> (x : A) -> (y : A) -> (eq: x = y) -> Inspect x
+  
+inspect : {A : Type} -> (x : A) -> Inspect x
+inspect x = wi x _ refl
+
+match : {A : Type} -> {x : A} -> (y : A) -> {eq : x = y} -> Inspect x
+match y {eq} = wi _ y eq
+
 succNotLTEZ : (n : Nat) -> LTE (S n) Z -> _|_
 succNotLTEZ n lteZero impossible 
 
@@ -47,6 +56,10 @@ advPlusPrf n c k prf = ?appprf
 natNotEqPlusSucc : (c,k : Nat) -> c = plus c (S k) -> _|_
 natNotEqPlusSucc c k refl impossible
 
+reduceOneZero : (c : Nat) -> reduce' (S Z) Z c = Z
+reduceOneZero Z = refl
+reduceOneZero (S k) = let ih = reduceOneZero k in ?rozprf_2
+
 reduceElimg : (n,c,r : Nat) -> (prf: (S n) = c + (S r)) -> reduce' (S n) c (S r) = Z
 reduceElimg n c Z prf = ?prf_1
 reduceElimg n c (S k) prf with (decEq n c)
@@ -78,6 +91,15 @@ reducel n (c ** prf) (S r) with (decEq n (S c))
 reduce : Cyc (S n) -> Cyc (S n)
 reduce (mkCyc r) {n=n} = mkCyc $ reduce' (S n) Z r
 
+reducePlusReduceLeft : (n,left,right : Nat) -> reduce' n Z (plus left right) = reduce' n Z (plus (reduce' n Z left) right)
+reducePlusReduceLeft n Z r = refl
+reducePlusReduceLeft n (S k) r with (decEq n 1)
+  | (Yes p) = let ih = reducePlusReduceLeft n k r in ?rprly
+  | (No p) with (inspect (reduce' n 1 k))
+    | (match Z {eq=eq}) = let ih = reducePlusReduceLeft n k r in ?rprlnz
+    | (match (S k') {eq=eq}) = let ih = reducePlusReduceLeft n k r in ?rprlns
+
+
 reduceP : (n: Nat) -> Cyc (S n) -> (r : Nat ** LT r (S n))
 reduceP Z (mkCyc c) = (Z ** (lteSucc lteZero))
 reduceP (S n) (mkCyc c) = reducel (S (S n)) (Z ** (lteSucc lteZero)) c
@@ -102,14 +124,29 @@ cycInverse {n = S n} c with (reduceP (S n) c)
     | (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
 
 partial
-cycInverse2 : (c : Cyc (S n)) -> (i : Cyc (S n) ** ((mkCyc {n=n} $ getWitness $ reduceP n (cycPlus c i)) = mkCyc {n = n} 0))
-cycInverse2 {n = n} c with (reduceP n c)
-  | (Z ** prf) = ((mkCyc Z) ** ?invzprf)
-  --| ((S r) ** (lteSucc prf)) with (decEq n 0)
-    --| (Yes prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsyprf)
-    --| (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
+cycInverse2 : (c : Cyc (S n)) -> (i : Cyc (S n) ** (reduce (cycPlus c i) = mkCyc {n = n} 0))
+cycInverse2 {n = Z} (mkCyc c) = (mkCyc Z ** ?inv2zprf)
+cycInverse2 {n = S n} (mkCyc c) with (reduceP (S n) (mkCyc c))
+  | (Z ** prf) = ((mkCyc Z) ** ?inv2szprf)
+  | ((S r) ** (lteSucc prf)) with (decEq n 0)
+    | (Yes prf') = (mkCyc ((S (S n)) - (S r)) ** ?inv2syprf)
+    | (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?inv2snprf)
 
 ---------- Proofs ----------
+
+Main.rprly = proof
+  compute
+  intro n,p,k,r
+  rewrite sym p
+  intro
+  compute
+  exact ih
+
+
+Main.rozprf_2 = proof
+  intros
+  exact ih
+
 
 Main.remprf = proof
   compute
