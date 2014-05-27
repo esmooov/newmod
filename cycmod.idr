@@ -91,18 +91,17 @@ reducel n (c ** prf) (S r) with (decEq n (S c))
 reduce : Cyc (S n) -> Cyc (S n)
 reduce (mkCyc r) {n=n} = mkCyc $ reduce' (S n) Z r
 
-reducePlusReduceLeft : (n,left,right : Nat) -> reduce' n Z (plus left right) = reduce' n Z (plus (reduce' n Z left) right)
-reducePlusReduceLeft n Z r = refl
-reducePlusReduceLeft n (S k) r with (decEq n 1)
-  | (Yes p) = let ih = reducePlusReduceLeft n k r in ?rprly
-  | (No p) with (inspect (reduce' n 1 k))
-    | (match Z {eq=eq}) = let ih = reducePlusReduceLeft n k r in ?rprlnz
-    | (match (S k') {eq=eq}) = let ih = reducePlusReduceLeft n k r in ?rprlns
-
-
 reduceP : (n: Nat) -> Cyc (S n) -> (r : Nat ** LT r (S n))
 reduceP Z (mkCyc c) = (Z ** (lteSucc lteZero))
 reduceP (S n) (mkCyc c) = reducel (S (S n)) (Z ** (lteSucc lteZero)) c
+
+reducePP : Cyc (S n) -> Cyc (S n)
+reducePP {n=n} c = mkCyc $ getWitness $ reduceP n c
+
+reducePPInject : (n : Nat) -> (c,i : Cyc (S n)) -> reducePP (cycPlus c i) = reducePP (cycPlus (reducePP c) i)
+reducePPInject Z (mkCyc c) (mkCyc i) = ?rppi_1
+reducePPInject (S k) (mkCyc Z) (mkCyc i) = ?rppi_2
+reducePPInject (S k) (mkCyc (S c)) (mkCyc i) = ?rppi_3
 
 cycInverse' : Nat -> Nat -> Nat -> Nat
 cycInverse' Z _ _ = Z 
@@ -124,23 +123,23 @@ cycInverse {n = S n} c with (reduceP (S n) c)
     | (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
 
 partial
-cycInverse2 : (c : Cyc (S n)) -> (i : Cyc (S n) ** (reduce (cycPlus c i) = mkCyc {n = n} 0))
-cycInverse2 {n = Z} (mkCyc c) = (mkCyc Z ** ?inv2zprf)
-cycInverse2 {n = S n} (mkCyc c) with (reduceP (S n) (mkCyc c))
-  | (Z ** prf) = ((mkCyc Z) ** ?inv2szprf)
-  | ((S r) ** (lteSucc prf)) with (decEq n 0)
-    | (Yes prf') = (mkCyc ((S (S n)) - (S r)) ** ?inv2syprf)
-    | (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?inv2snprf)
+cycInverse2 : (c : Cyc (S n)) -> (i : Cyc (S n) ** (reducePP (cycPlus c i) = mkCyc {n = n} 0))
+cycInverse2 {n = Z} (mkCyc c) = (mkCyc Z ** refl)
+cycInverse2 {n = S n} (mkCyc c) with (inspect (reduceP (S n) (mkCyc c)))
+  | match (Z ** prf) {eq=eq} = ((mkCyc Z) ** ?inv2szprf)
+  | match ((S r') ** prf) {eq=eq} with (decEq n Z)
+    | (Yes prf') = (mkCyc ((S (S n)) - (S r')) ** ?inv2syprf)
+    | (No prf') = (mkCyc ((S (S n)) - (S r')) ** ?inv2snprf)
 
 ---------- Proofs ----------
 
-Main.rprly = proof
+Main.inv2szprf = proof
   compute
-  intro n,p,k,r
-  rewrite sym p
-  intro
+  intros
+  rewrite sym (plusZeroRightNeutral c)
+  rewrite sym eq
   compute
-  exact ih
+  trivial
 
 
 Main.rozprf_2 = proof
