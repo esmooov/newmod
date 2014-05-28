@@ -91,6 +91,9 @@ reducel n (c ** prf) (S r) with (decEq n (S c))
 reduce : Cyc (S n) -> Cyc (S n)
 reduce (mkCyc r) {n=n} = mkCyc $ reduce' (S n) Z r
 
+reduceO : Cyc (S n) -> Cyc (S n)
+reduceO {n=n} (mkCyc r) = mkCyc (modNat r (S n))
+
 reduceP : (n: Nat) -> Cyc (S n) -> (r : Nat ** LT r (S n))
 reduceP Z (mkCyc c) = (Z ** (lteSucc lteZero))
 reduceP (S n) (mkCyc c) = reducel (S (S n)) (Z ** (lteSucc lteZero)) c
@@ -106,6 +109,10 @@ minusElim n Z prf = ?minusElimPrfz
 minusElim Z (S r) prf = FalseElim ?wrongo
 minusElim (S n) (S r) (lteSucc prf) = let ih = minusElim n r prf in ?minusElimPrf
 
+reducePlus : (c,r : Cyc (S n)) -> reduce r = mkCyc {n=n} Z -> reduce c = reduce (cycPlus c r)
+reducePlus (mkCyc c) (mkCyc Z) prf = ?rpprf_1
+reducePlus (mkCyc c) (mkCyc (S k)) prf = ?rpprf_2
+
 cycInverse : (c : Cyc (S n)) -> (i : Cyc (S n) ** (reduce (cycPlus (mkCyc (getWitness $ reduceP n c)) i)) = mkCyc {n = n} 0)
 cycInverse {n = Z} (mkCyc c) = (mkCyc Z ** refl)
 cycInverse {n = S n} c with (reduceP (S n) c)
@@ -114,9 +121,31 @@ cycInverse {n = S n} c with (reduceP (S n) c)
     | (Yes prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsyprf)
     | (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
 
+modNatOne : (c : Nat) -> modNat c (S Z) = Z
+modNatOne Z = refl
+modNatOne (S c) = let ih = modNatOne c in ?mno
+
+partial
+cycInverseO : (c : Cyc (S n)) -> (i : Cyc (S n) ** (reduceO (cycPlus c i)) = mkCyc {n = n} 0)
+cycInverseO {n = Z} (mkCyc c) = (mkCyc Z ** ?cioz)
+--cycInverseO {n = S n} c with (reduceP (S n) c)
+  --| (Z ** prf) = ((mkCyc Z) ** refl)
+  --| ((S r) ** (lteSucc prf)) with (decEq n 0)
+    --| (Yes prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsyprf)
+    --| (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
+
 -- New inverse function if (reduce Z+c = 0 then Z else if reduce (S Z + c] = 0...
+-- OR
+-- reduce (n) = reduce (n + c) if reduce c = Z
 
 ---------- Proofs ----------
+
+Main.rpprf_1 = proof
+  compute
+  intros
+  rewrite sym (plusZeroRightNeutral c)
+  trivial
+
 
 
 Main.rozprf_2 = proof

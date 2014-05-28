@@ -106,6 +106,10 @@ minusElim n Z prf = ?minusElimPrfz
 minusElim Z (S r) prf = FalseElim ?wrongo
 minusElim (S n) (S r) (lteSucc prf) = let ih = minusElim n r prf in ?minusElimPrf
 
+reducePlus : (c,r : Cyc (S n)) -> reduce r = mkCyc {n=n} Z -> reduce c = reduce (cycPlus c r)
+reducePlus (mkCyc c) (mkCyc Z) prf = ?rpprf_1
+reducePlus (mkCyc c) (mkCyc (S k)) prf = ?rpprf_2
+
 cycInverse : (c : Cyc (S n)) -> (i : Cyc (S n) ** (reduce (cycPlus (mkCyc (getWitness $ reduceP n c)) i)) = mkCyc {n = n} 0)
 cycInverse {n = Z} (mkCyc c) = (mkCyc Z ** refl)
 cycInverse {n = S n} c with (reduceP (S n) c)
@@ -114,23 +118,9 @@ cycInverse {n = S n} c with (reduceP (S n) c)
     | (Yes prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsyprf)
     | (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
 
-partial
-reduceReduce : (n,c,i : Nat) -> (reduce {n=n} (cycPlus (mkCyc (getWitness $ reducel (S n) (Z ** (lteSucc lteZero)) c)) (mkCyc i))) = reduce {n=n} (cycPlus (mkCyc c) (mkCyc i))
-reduceReduce Z c i  = ?rr_1
---reduceReduce (S k) (mkCyc Z) (mkCyc i) = refl
---reduceReduce (S k) (mkCyc (S c)) (mkCyc i) with (inspect $ getWitness $ reduceP (S k) (mkCyc (S c)))
-  --| match Z {eq=eq} = let ih = reduceReduce (S k) (assert_smaller (mkCyc (S c)) (mkCyc c)) (mkCyc i) in ?rr_3
-  --| match (S c') = ?rr_4
+-- New inverse function if (reduce Z+c = 0 then Z else if reduce (S Z + c] = 0...
 
 ---------- Proofs ----------
-
---Main.rr_1 = proof
-  --compute
-  --intros
-  --rewrite sym (reduceOneZero i)
-  --rewrite sym (reduceOneZero (plus c i))
-  --trivial
-
 
 
 Main.rozprf_2 = proof
