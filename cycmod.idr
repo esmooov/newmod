@@ -95,14 +95,6 @@ reduceP : (n: Nat) -> Cyc (S n) -> (r : Nat ** LT r (S n))
 reduceP Z (mkCyc c) = (Z ** (lteSucc lteZero))
 reduceP (S n) (mkCyc c) = reducel (S (S n)) (Z ** (lteSucc lteZero)) c
 
-reducePP : Cyc (S n) -> Cyc (S n)
-reducePP {n=n} c = mkCyc $ getWitness $ reduceP n c
-
-reducePPInject : (n : Nat) -> (c,i : Cyc (S n)) -> reducePP (cycPlus c i) = reducePP (cycPlus (reducePP c) i)
-reducePPInject Z (mkCyc c) (mkCyc i) = ?rppi_1
-reducePPInject (S k) (mkCyc Z) (mkCyc i) = ?rppi_2
-reducePPInject (S k) (mkCyc (S c)) (mkCyc i) = ?rppi_3
-
 cycInverse' : Nat -> Nat -> Nat -> Nat
 cycInverse' Z _ _ = Z 
 cycInverse' n c Z = c
@@ -122,24 +114,9 @@ cycInverse {n = S n} c with (reduceP (S n) c)
     | (Yes prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsyprf)
     | (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
 
-partial
-cycInverse2 : (c : Cyc (S n)) -> (i : Cyc (S n) ** (reducePP (cycPlus c i) = mkCyc {n = n} 0))
-cycInverse2 {n = Z} (mkCyc c) = (mkCyc Z ** refl)
-cycInverse2 {n = S n} (mkCyc c) with (inspect (reduceP (S n) (mkCyc c)))
-  | match (Z ** prf) {eq=eq} = ((mkCyc Z) ** ?inv2szprf)
-  | match ((S r') ** prf) {eq=eq} with (decEq n Z)
-    | (Yes prf') = (mkCyc ((S (S n)) - (S r')) ** ?inv2syprf)
-    | (No prf') = (mkCyc ((S (S n)) - (S r')) ** ?inv2snprf)
+-- New inverse function if (reduce Z+c = 0 then Z else if reduce (S Z + c] = 0...
 
 ---------- Proofs ----------
-
-Main.inv2szprf = proof
-  compute
-  intros
-  rewrite sym (plusZeroRightNeutral c)
-  rewrite sym eq
-  compute
-  trivial
 
 
 Main.rozprf_2 = proof

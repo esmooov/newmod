@@ -95,14 +95,6 @@ reduceP : (n: Nat) -> Cyc (S n) -> (r : Nat ** LT r (S n))
 reduceP Z (mkCyc c) = (Z ** (lteSucc lteZero))
 reduceP (S n) (mkCyc c) = reducel (S (S n)) (Z ** (lteSucc lteZero)) c
 
-reducePP : Cyc (S n) -> Cyc (S n)
-reducePP {n=n} c = mkCyc $ getWitness $ reduceP n c
-
-reducePPInject : (n : Nat) -> (c,i : Cyc (S n)) -> reducePP (cycPlus c i) = reducePP (cycPlus (reducePP c) i)
-reducePPInject Z (mkCyc c) (mkCyc i) = ?rppi_1
-reducePPInject (S k) (mkCyc Z) (mkCyc i) = ?rppi_3
-reducePPInject (S k) (mkCyc (S j)) (mkCyc i) = ?rppi_4
-
 cycInverse' : Nat -> Nat -> Nat -> Nat
 cycInverse' Z _ _ = Z 
 cycInverse' n c Z = c
@@ -123,23 +115,22 @@ cycInverse {n = S n} c with (reduceP (S n) c)
     | (No prf') = (mkCyc ((S (S n)) - (S r)) ** ?invsnprf)
 
 partial
-cycInverse2 : (c : Cyc (S n)) -> (i : Cyc (S n) ** (reducePP (cycPlus c i) = mkCyc {n = n} 0))
-cycInverse2 {n = Z} (mkCyc c) = (mkCyc Z ** refl)
-cycInverse2 {n = S n} (mkCyc c) with (inspect (reduceP (S n) (mkCyc c)))
-  | match (Z ** prf) {eq=eq} = ((mkCyc Z) ** ?inv2szprf)
-  | match ((S r') ** prf) {eq=eq} with (decEq n Z)
-    | (Yes prf') = (mkCyc ((S (S n)) - (S r')) ** ?inv2syprf)
-    | (No prf') = (mkCyc ((S (S n)) - (S r')) ** ?inv2snprf)
+reduceReduce : (n,c,i : Nat) -> (reduce {n=n} (cycPlus (mkCyc (getWitness $ reducel (S n) (Z ** (lteSucc lteZero)) c)) (mkCyc i))) = reduce {n=n} (cycPlus (mkCyc c) (mkCyc i))
+reduceReduce Z c i  = ?rr_1
+--reduceReduce (S k) (mkCyc Z) (mkCyc i) = refl
+--reduceReduce (S k) (mkCyc (S c)) (mkCyc i) with (inspect $ getWitness $ reduceP (S k) (mkCyc (S c)))
+  --| match Z {eq=eq} = let ih = reduceReduce (S k) (assert_smaller (mkCyc (S c)) (mkCyc c)) (mkCyc i) in ?rr_3
+  --| match (S c') = ?rr_4
 
 ---------- Proofs ----------
 
-Main.inv2szprf = proof
-  compute
-  intros
-  rewrite sym (plusZeroRightNeutral c)
-  rewrite sym eq
-  compute
-  trivial
+--Main.rr_1 = proof
+  --compute
+  --intros
+  --rewrite sym (reduceOneZero i)
+  --rewrite sym (reduceOneZero (plus c i))
+  --trivial
+
 
 
 Main.rozprf_2 = proof
